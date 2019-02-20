@@ -1,6 +1,6 @@
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86
 LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
-configDescList=org.eclipse.launchbar.core.descriptorType.default\:My Project Debug Download And Reset,org.eclipse.launchbar.core.descriptorType.default\:W6100S_Loopback.elf
+configDescList=org.eclipse.launchbar.core.descriptorType.default\:W6100_Loopback.elf,org.eclipse.launchbar.core.descriptorType.default\:My Project Debug Download And Reset
 eclipse.preferences.version=1
 org.eclipse.launchbar.core.descriptorType.default\:My\ Project\ Debug\ Download\ And\ Reset/activeLaunchMode=debug
 org.eclipse.launchbar.core.descriptorType.default\:My\ Project\ Debug\ Download\ And\ Reset/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local

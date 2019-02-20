@@ -256,10 +256,5 @@
 			<resource resourceType="PROJECT" workspacePath="/W6100S_DMA"/>
 		</configuration>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="com.atollic.truestudio.exe.debug.202666008;com.atollic.truestudio.exe.debug.202666008.;com.atollic.truestudio.exe.debug.toolchain.gcc.1377229695;com.atollic.truestudio.gcc.input.1329582505">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="com.atollic.truestudio.mbs.ARMToolsPerProjectProfileC"/>
-		</scannerConfigBuildInfo>
-	</storageModule>
+	<storageModule moduleId="scannerConfiguration"/>
 </cproject>
