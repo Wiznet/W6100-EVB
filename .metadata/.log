@@ -1,0 +1,209 @@
+!SESSION 2019-02-20 14:23:47.770 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_152
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86 -data I:\99_GitHub\WIZet_Reference\W6100\W6100_EVB
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:23:49.077
+!MESSAGE Loading product manager
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:23:49.084
+!MESSAGE OS info: Windows 10, 10.0, x86
+
+!ENTRY TrueSTUDIO 1 0 2019-02-20 14:23:49.757
+!MESSAGE Target: STM32, Version: 9.0.1, Build date: 20180420-1214, Installation dir: /C:/Program Files (x86)/Atollic/TrueSTUDIO for STM32 9.0.1/ide/
+
+!ENTRY TrueSTUDIO 1 0 2019-02-20 14:23:49.758
+!MESSAGE Workspace: I:\99_GitHub\WIZet_Reference\W6100\W6100_EVB
+
+!ENTRY org.eclipse.jface 2 0 2019-02-20 14:23:50.801
+!MESSAGE Keybinding conflicts occurred.  They may interfere with normal accelerator operation.
+!SUBENTRY 1 org.eclipse.jface 2 0 2019-02-20 14:23:50.801
+!MESSAGE A conflict occurred for ALT+CTRL+T:
+Binding(ALT+CTRL+T,
+	ParameterizedCommand(Command(org.eclipse.team.svn.ui.command.EditPropertiesCommand,Show Properties,
+		,
+		Category(org.eclipse.team.svn.ui.command.category,SVN,null,true),
+		org.eclipse.ui.internal.WorkbenchHandlerServiceHandler@fee14b,
+		,,true),null),
+	org.eclipse.ui.defaultAcceleratorConfiguration,
+	org.eclipse.ui.contexts.window,,,system)
+Binding(ALT+CTRL+T,
+	ParameterizedCommand(Command(org.eclipse.tm.terminal.connector.local.command.launch,Open Local Terminal on Selection,
+		,
+		Category(org.eclipse.tm.terminal.view.ui.commands.category,Terminal Commands,null,true),
+		org.eclipse.ui.internal.WorkbenchHandlerServiceHandler@1c3d22f,
+		,,true),null),
+	org.eclipse.ui.defaultAcceleratorConfiguration,
+	org.eclipse.ui.contexts.window,,,system)
+
+!ENTRY com.atollic.truestudio.integration.processorexpert 0 0 2019-02-20 14:23:54.076
+!MESSAGE Atollic TrueSTUDIO Processor Expert integration is up.
+
+!ENTRY edu.hawaii.ics.csdl.jupiter 1 0 2019-02-20 14:23:54.107
+!MESSAGE Code Review is up.
+
+!ENTRY org.eclipse.egit.ui 2 0 2019-02-20 14:23:54.440
+!MESSAGE Warning: The environment variable HOME is not set. The following directory will be used to store the Git
+user global configuration and to define the default location to store repositories: 'C:\Users\irina'. If this is
+not correct please set the HOME environment variable and restart Eclipse. Otherwise Git for Windows and
+EGit might behave differently since they see different configuration options.
+This warning can be switched off on the Team > Git > Confirmations and Warnings preference page.
+
+!ENTRY org.eclipse.cdt.core 1 0 2019-02-20 14:24:09.556
+!MESSAGE Indexed 'W6100S_Loopback' (0 sources, 0 headers) in 0.001 sec: 0 declarations; 0 references; 0 unresolved inclusions; 0 syntax errors; 0 unresolved names (0%)
+
+!ENTRY com.atollic.hardwaredebug.launch 2 0 2019-02-20 14:33:27.164
+!MESSAGE Won't launch debug session since we failed to locate the binary.
+
+!ENTRY com.atollic.hardwaredebug.launch 2 0 2019-02-20 14:33:57.404
+!MESSAGE Won't launch debug session since we failed to locate the binary.
+
+!ENTRY org.eclipse.ui 4 4 2019-02-20 14:34:11.457
+!MESSAGE Referenced part does not exist yet: org.eclipse.ui.views.TaskList.
+
+!ENTRY org.eclipse.cdt.core 4 0 2019-02-20 14:38:41.559
+!MESSAGE Launch attempt in non existent working directory "I:\99_GitHub\WIZet_Reference\W6100\W6100_EVB\TrueStudio\W6100_Loopback\Debug"
+!STACK 0
+java.lang.Exception
+	at org.eclipse.cdt.core.CCorePlugin.logStackTrace(CCorePlugin.java:1558)
+	at org.eclipse.cdt.core.CommandLauncher.execute(CommandLauncher.java:190)
+	at org.eclipse.cdt.managedbuilder.internal.buildmodel.CommandBuilder.build(CommandBuilder.java:105)
+	at org.eclipse.cdt.managedbuilder.internal.buildmodel.StepBuilder.build(StepBuilder.java:94)
+	at org.eclipse.cdt.managedbuilder.internal.buildmodel.DescriptionBuilder$BuildStepVisitor.visit(DescriptionBuilder.java:92)
+	at org.eclipse.cdt.managedbuilder.buildmodel.BuildDescriptionManager.doAccept(BuildDescriptionManager.java:151)
+	at org.eclipse.cdt.managedbuilder.buildmodel.BuildDescriptionManager.doAccept(BuildDescriptionManager.java:159)
+	at org.eclipse.cdt.managedbuilder.buildmodel.BuildDescriptionManager.doAccept(BuildDescriptionManager.java:133)
+	at org.eclipse.cdt.managedbuilder.buildmodel.BuildDescriptionManager.accept(BuildDescriptionManager.java:127)
+	at org.eclipse.cdt.managedbuilder.internal.buildmodel.DescriptionBuilder.build(DescriptionBuilder.java:160)
+	at org.eclipse.cdt.managedbuilder.core.InternalBuildRunner.invokeBuild(InternalBuildRunner.java:129)
+	at org.eclipse.cdt.managedbuilder.internal.core.CommonBuilder.build(CommonBuilder.java:756)
+	at org.eclipse.cdt.managedbuilder.internal.core.CommonBuilder.build(CommonBuilder.java:516)
+	at org.eclipse.cdt.managedbuilder.internal.core.CommonBuilder.build(CommonBuilder.java:460)
+	at org.eclipse.core.internal.events.BuildManager$2.run(BuildManager.java:736)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:42)
+	at org.eclipse.core.internal.events.BuildManager.basicBuild(BuildManager.java:207)
+	at org.eclipse.core.internal.events.BuildManager.basicBuild(BuildManager.java:247)
+	at org.eclipse.core.internal.events.BuildManager$1.run(BuildManager.java:302)
+	at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:42)
+	at org.eclipse.core.internal.events.BuildManager.basicBuild(BuildManager.java:305)
+	at org.eclipse.core.internal.events.BuildManager.basicBuildLoop(BuildManager.java:361)
+	at org.eclipse.core.internal.events.BuildManager.build(BuildManager.java:384)
+	at org.eclipse.core.internal.resources.Workspace.buildInternal(Workspace.java:487)
+	at org.eclipse.core.internal.resources.Workspace.build(Workspace.java:399)
+	at org.eclipse.ui.actions.GlobalBuildAction$1.run(GlobalBuildAction.java:177)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:55)
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:40:52.577
+!MESSAGE Unloading product manager
+!SESSION 2019-02-20 14:40:52.887 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_152
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86 -data I:\99_GitHub\WIZet_Reference\W6100\W6100_EVB
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:40:54.157
+!MESSAGE Loading product manager
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:40:54.162
+!MESSAGE OS info: Windows 10, 10.0, x86
+
+!ENTRY TrueSTUDIO 1 0 2019-02-20 14:40:54.946
+!MESSAGE Target: STM32, Version: 9.0.1, Build date: 20180420-1214, Installation dir: /C:/Program Files (x86)/Atollic/TrueSTUDIO for STM32 9.0.1/ide/
+
+!ENTRY TrueSTUDIO 1 0 2019-02-20 14:40:54.947
+!MESSAGE Workspace: I:\99_GitHub\WIZet_Reference\W6100\W6100_EVB
+
+!ENTRY org.eclipse.jface 2 0 2019-02-20 14:40:55.991
+!MESSAGE Keybinding conflicts occurred.  They may interfere with normal accelerator operation.
+!SUBENTRY 1 org.eclipse.jface 2 0 2019-02-20 14:40:55.991
+!MESSAGE A conflict occurred for ALT+CTRL+T:
+Binding(ALT+CTRL+T,
+	ParameterizedCommand(Command(org.eclipse.team.svn.ui.command.EditPropertiesCommand,Show Properties,
+		,
+		Category(org.eclipse.team.svn.ui.command.category,SVN,null,true),
+		org.eclipse.ui.internal.WorkbenchHandlerServiceHandler@48d140,
+		,,true),null),
+	org.eclipse.ui.defaultAcceleratorConfiguration,
+	org.eclipse.ui.contexts.window,,,system)
+Binding(ALT+CTRL+T,
+	ParameterizedCommand(Command(org.eclipse.tm.terminal.connector.local.command.launch,Open Local Terminal on Selection,
+		,
+		Category(org.eclipse.tm.terminal.view.ui.commands.category,Terminal Commands,null,true),
+		org.eclipse.ui.internal.WorkbenchHandlerServiceHandler@1b238da,
+		,,true),null),
+	org.eclipse.ui.defaultAcceleratorConfiguration,
+	org.eclipse.ui.contexts.window,,,system)
+
+!ENTRY com.atollic.truestudio.integration.processorexpert 0 0 2019-02-20 14:41:01.047
+!MESSAGE Atollic TrueSTUDIO Processor Expert integration is up.
+
+!ENTRY edu.hawaii.ics.csdl.jupiter 1 0 2019-02-20 14:41:01.083
+!MESSAGE Code Review is up.
+
+!ENTRY org.eclipse.egit.ui 2 0 2019-02-20 14:41:01.326
+!MESSAGE Warning: The environment variable HOME is not set. The following directory will be used to store the Git
+user global configuration and to define the default location to store repositories: 'C:\Users\irina'. If this is
+not correct please set the HOME environment variable and restart Eclipse. Otherwise Git for Windows and
+EGit might behave differently since they see different configuration options.
+This warning can be switched off on the Team > Git > Confirmations and Warnings preference page.
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:41:55.459
+!MESSAGE Unloading product manager
+!SESSION 2019-02-20 14:53:34.567 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_152
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:53:35.901
+!MESSAGE Loading product manager
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 14:53:35.908
+!MESSAGE OS info: Windows 10, 10.0, x86
+
+!ENTRY TrueSTUDIO 1 0 2019-02-20 14:53:36.720
+!MESSAGE Target: STM32, Version: 9.0.1, Build date: 20180420-1214, Installation dir: /C:/Program Files (x86)/Atollic/TrueSTUDIO for STM32 9.0.1/ide/
+
+!ENTRY TrueSTUDIO 1 0 2019-02-20 14:53:36.721
+!MESSAGE Workspace: I:\99_GitHub\WIZet_Reference\W6100\W6100_EVB
+
+!ENTRY org.eclipse.jface 2 0 2019-02-20 14:53:37.809
+!MESSAGE Keybinding conflicts occurred.  They may interfere with normal accelerator operation.
+!SUBENTRY 1 org.eclipse.jface 2 0 2019-02-20 14:53:37.809
+!MESSAGE A conflict occurred for ALT+CTRL+T:
+Binding(ALT+CTRL+T,
+	ParameterizedCommand(Command(org.eclipse.team.svn.ui.command.EditPropertiesCommand,Show Properties,
+		,
+		Category(org.eclipse.team.svn.ui.command.category,SVN,null,true),
+		org.eclipse.ui.internal.WorkbenchHandlerServiceHandler@b66a26,
+		,,true),null),
+	org.eclipse.ui.defaultAcceleratorConfiguration,
+	org.eclipse.ui.contexts.window,,,system)
+Binding(ALT+CTRL+T,
+	ParameterizedCommand(Command(org.eclipse.tm.terminal.connector.local.command.launch,Open Local Terminal on Selection,
+		,
+		Category(org.eclipse.tm.terminal.view.ui.commands.category,Terminal Commands,null,true),
+		org.eclipse.ui.internal.WorkbenchHandlerServiceHandler@18e6fc2,
+		,,true),null),
+	org.eclipse.ui.defaultAcceleratorConfiguration,
+	org.eclipse.ui.contexts.window,,,system)
+
+!ENTRY com.atollic.truestudio.integration.processorexpert 0 0 2019-02-20 14:53:43.067
+!MESSAGE Atollic TrueSTUDIO Processor Expert integration is up.
+
+!ENTRY edu.hawaii.ics.csdl.jupiter 1 0 2019-02-20 14:53:43.102
+!MESSAGE Code Review is up.
+
+!ENTRY org.eclipse.egit.ui 2 0 2019-02-20 14:53:43.380
+!MESSAGE Warning: The environment variable HOME is not set. The following directory will be used to store the Git
+user global configuration and to define the default location to store repositories: 'C:\Users\irina'. If this is
+not correct please set the HOME environment variable and restart Eclipse. Otherwise Git for Windows and
+EGit might behave differently since they see different configuration options.
+This warning can be switched off on the Team > Git > Confirmations and Warnings preference page.
+
+!ENTRY com.atollic.truestudio.productmanager 1 0 2019-02-20 15:00:38.578
+!MESSAGE Unloading product manager
