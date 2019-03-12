@@ -160,7 +160,7 @@ int main(void)
 	    loopback_udps(0,ethBuf0,50000,AS_IPV4);
 		loopback_tcps(1,50001,ethBuf0,AS_IPV4);
 		loopback_tcps(2,50002,ethBuf1,AS_IPV4);
-		loopback_tcps(2,50002,ethBuf1,AS_IPV6);
+		loopback_tcps(3,50003,ethBuf1,AS_IPV6);
     }
 }
 
