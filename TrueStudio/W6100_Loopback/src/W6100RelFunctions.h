@@ -4,7 +4,7 @@
 #include "wizchip_conf.h"
 
 
-//#define DMA
+#define DMA
 
 #if (_WIZCHIP_IO_MODE_==_WIZCHIP_IO_MODE_BUS_INDIR_)
 	#ifdef DMA

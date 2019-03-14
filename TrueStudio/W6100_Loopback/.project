@@ -25,6 +25,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>Doxygen</name>
+			<type>2</type>
+			<location>I:/99_GitHub/WIZet_Reference/W6100/W6100_EVB/Libraries/io6Library/Doxygen</location>
+		</link>
+		<link>
 			<name>Ethernet</name>
 			<type>2</type>
 			<locationURI>io6Library/Ethernet</locationURI>
