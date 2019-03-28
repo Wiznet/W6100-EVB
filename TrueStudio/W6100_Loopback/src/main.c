@@ -1,6 +1,6 @@
-#include <loopback.h_irina>
 #include <stdio.h>
 #include "HAL_Config.h"
+#include "HALInit.h"
 #include "wizchip_conf.h"
 #include "inttypes.h"
 #include "stm32f10x_gpio.h"
@@ -8,6 +8,7 @@
 #include "W6100RelFunctions.h"
 #include "serialCommand.h"
 #include "stm32f10x_rcc.h"
+#include "loopback.h"
 
 wiz_NetInfo gWIZNETINFO = { .mac = {0x00,0x08,0xdc,0xFF,0xFF,0xFF},
 							.ip = {192,168,177,25},
@@ -86,13 +87,17 @@ uint8_t DestIP6_G[16] = {0x20,0x01,0x02,0xb8,
                          };
 
 
-#define ETH_MAX_BUF_SIZE	8192
+#define ETH_MAX_BUF_SIZE	1024
 uint8_t  remote_ip[4] = {192,168,177,200};                      //
 uint16_t remote_port = 8080;
 unsigned char ethBuf0[ETH_MAX_BUF_SIZE];
 unsigned char ethBuf1[ETH_MAX_BUF_SIZE];
 unsigned char ethBuf2[ETH_MAX_BUF_SIZE];
 unsigned char ethBuf3[ETH_MAX_BUF_SIZE];
+unsigned char ethBuf4[ETH_MAX_BUF_SIZE];
+unsigned char ethBuf5[ETH_MAX_BUF_SIZE];
+unsigned char ethBuf6[ETH_MAX_BUF_SIZE];
+unsigned char ethBuf7[ETH_MAX_BUF_SIZE];
 
 uint8_t bLoopback = 1;
 uint8_t bRandomPacket = 0;
@@ -106,7 +111,13 @@ int main(void)
 	volatile int i;
 	volatile int j,k;
  	uint16_t ver=0;
+ 	uint16_t curr_time = 0;
 	uint8_t syslock = SYS_NET_LOCK;
+	uint8_t svr_ipv4[4] = {192, 168, 177, 235};
+	uint8_t svr_ipv6[16] = {0xfe, 0x80, 0x00, 0x00,
+							0x00, 0x00, 0x00, 0x00,
+							0xc1, 0x0b, 0x0a, 0xdf,
+							0xea, 0xf4, 0xf4, 0x2d};
 
 	RCC_ClocksTypeDef RCCA_TypeDef;
 	RCCInitialize();
@@ -119,8 +130,7 @@ int main(void)
 
 
 #if _WIZCHIP_IO_MODE_ & _WIZCHIP_IO_MODE_SPI_
-	/* SPI method callback
-	 * registration */
+	/* SPI method callback registration */
 	#if defined SPI_DMA
 		reg_wizchip_spi_cbfunc(spiReadByte, spiWriteByte,spiReadBurst,spiWriteBurst);
 	#else
@@ -148,7 +158,7 @@ int main(void)
 	delay(10);
 
 	W6100Initialze();
-	ctlwizchip(CW_SYS_UNLOCK,&syslock);
+	ctlwizchip(CW_SYS_UNLOCK,& syslock);
 	ctlnetwork(CN_SET_NETINFO,&gWIZNETINFO);
 
 
@@ -156,16 +166,13 @@ int main(void)
 
 	print_network_information();
 
+
 	while(1)
     {
-	    loopback_udps(7,ethBuf0,50000,AS_IPV4);
-		loopback_tcps(1,50001,ethBuf0,AS_IPV4);
-		loopback_tcps(2,50002,ethBuf1,AS_IPV4);
-		loopback_tcps(3,50003,ethBuf0,AS_IPV4);
-		loopback_tcps(4,50004,ethBuf1,AS_IPV4);
-	    loopback_tcps(5,50005,ethBuf0,AS_IPV4);
-		loopback_tcps(6,50006,ethBuf1,AS_IPV6);
-		loopback_tcps(0,50007,ethBuf0,AS_IPDUAL);
+	    loopback_udps(0,ethBuf0,50000,AS_IPV4);
+		loopback_tcps(1,ethBuf3,50003,AS_IPV4);
+		loopback_tcps(2,ethBuf4,50004,AS_IPV6);
+		loopback_tcps(3,ethBuf5,50005,AS_IPDUAL);
 
 
     }
@@ -191,32 +198,44 @@ void print_network_information(void)
 	printf("Gate way   : %d.%d.%d.%d\n\r",gWIZNETINFO.gw[0],gWIZNETINFO.gw[1],gWIZNETINFO.gw[2],gWIZNETINFO.gw[3]);
 	printf("DNS Server : %d.%d.%d.%d\n\r",gWIZNETINFO.dns[0],gWIZNETINFO.dns[1],gWIZNETINFO.dns[2],gWIZNETINFO.dns[3]);
 	getGA6R(tmp_array);
-	printf("\r\nGW6 : %.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X",
-	                                   tmp_array[0], tmp_array[1], tmp_array[2], tmp_array[3],
-	                                   tmp_array[4], tmp_array[5], tmp_array[6], tmp_array[7],
-	                                   tmp_array[8], tmp_array[9], tmp_array[10],tmp_array[11],
-	                                   tmp_array[12],tmp_array[13],tmp_array[14],tmp_array[15]);
+    printf("GW6 : %04X:%04X", ((uint16_t)tmp_array[0] << 8) | ((uint16_t)tmp_array[1]),
+    		((uint16_t)tmp_array[2] << 8) | ((uint16_t)tmp_array[3]));
+    printf(":%04X:%04X", ((uint16_t)tmp_array[4] << 8) | ((uint16_t)tmp_array[5]),
+    		((uint16_t)tmp_array[6] << 8) | ((uint16_t)tmp_array[7]));
+    printf(":%04X:%04X", ((uint16_t)tmp_array[8] << 8) | ((uint16_t)tmp_array[9]),
+    		((uint16_t)tmp_array[10] << 8) | ((uint16_t)tmp_array[11]));
+    printf(":%04X:%04X\r\n ", ((uint16_t)tmp_array[12] << 8) | ((uint16_t)tmp_array[13]),
+    		((uint16_t)tmp_array[14] << 8) | ((uint16_t)tmp_array[15]));
 
-	    getLLAR(tmp_array);
-	    printf("\r\nLLA : %.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X",
-	                                   tmp_array[0], tmp_array[1], tmp_array[2], tmp_array[3],
-	                                   tmp_array[4], tmp_array[5], tmp_array[6], tmp_array[7],
-	                                   tmp_array[8], tmp_array[9], tmp_array[10],tmp_array[11],
-	                                   tmp_array[12],tmp_array[13],tmp_array[14],tmp_array[15]);
-	    getGUAR(tmp_array);
-	    printf("\r\nGUA : %.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X",
-	                                   tmp_array[0], tmp_array[1], tmp_array[2], tmp_array[3],
-	                                   tmp_array[4], tmp_array[5], tmp_array[6], tmp_array[7],
-	                                   tmp_array[8], tmp_array[9], tmp_array[10],tmp_array[11],
-	                                   tmp_array[12],tmp_array[13],tmp_array[14],tmp_array[15]);
+	getLLAR(tmp_array);
+	printf("LLA : %04X:%04X", ((uint16_t)tmp_array[0] << 8) | ((uint16_t)tmp_array[1]),
+			((uint16_t)tmp_array[2] << 8) | ((uint16_t)tmp_array[3]));
+	printf(":%04X:%04X", ((uint16_t)tmp_array[4] << 8) | ((uint16_t)tmp_array[5]),
+			((uint16_t)tmp_array[6] << 8) | ((uint16_t)tmp_array[7]));
+	printf(":%04X:%04X", ((uint16_t)tmp_array[8] << 8) | ((uint16_t)tmp_array[9]),
+			((uint16_t)tmp_array[10] << 8) | ((uint16_t)tmp_array[11]));
+	printf(":%04X:%04X\r\n", ((uint16_t)tmp_array[12] << 8) | ((uint16_t)tmp_array[13]),
+			((uint16_t)tmp_array[14] << 8) | ((uint16_t)tmp_array[15]));
+	getGUAR(tmp_array);
+	printf("GUA : %04X:%04X", ((uint16_t)tmp_array[0] << 8) | ((uint16_t)tmp_array[1]),
+			((uint16_t)tmp_array[2] << 8) | ((uint16_t)tmp_array[3]));
+	printf(":%04X:%04X", ((uint16_t)tmp_array[4] << 8) | ((uint16_t)tmp_array[5]),
+			((uint16_t)tmp_array[6] << 8) | ((uint16_t)tmp_array[7]));
+	printf(":%04X:%04X", ((uint16_t)tmp_array[8] << 8) | ((uint16_t)tmp_array[9]),
+			((uint16_t)tmp_array[10] << 8) | ((uint16_t)tmp_array[11]));
+	printf(":%04X:%04X\r\n", ((uint16_t)tmp_array[12] << 8) | ((uint16_t)tmp_array[13]),
+			((uint16_t)tmp_array[14] << 8) | ((uint16_t)tmp_array[15]));
 
-	    getSUB6R(tmp_array);
-	    printf("\r\n6SM : %.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X:%.2X%.2X",
-	                                   tmp_array[0], tmp_array[1], tmp_array[2], tmp_array[3],
-	                                   tmp_array[4], tmp_array[5], tmp_array[6], tmp_array[7],
-	                                   tmp_array[8], tmp_array[9], tmp_array[10],tmp_array[11],
-	                                   tmp_array[12],tmp_array[13],tmp_array[14],tmp_array[15]);
+	getSUB6R(tmp_array);
+	printf("SUB6 : %04X:%04X", ((uint16_t)tmp_array[0] << 8) | ((uint16_t)tmp_array[1]),
+			((uint16_t)tmp_array[2] << 8) | ((uint16_t)tmp_array[3]));
+	printf(":%04X:%04X", ((uint16_t)tmp_array[4] << 8) | ((uint16_t)tmp_array[5]),
+			((uint16_t)tmp_array[6] << 8) | ((uint16_t)tmp_array[7]));
+	printf(":%04X:%04X", ((uint16_t)tmp_array[8] << 8) | ((uint16_t)tmp_array[9]),
+			((uint16_t)tmp_array[10] << 8) | ((uint16_t)tmp_array[11]));
+	printf(":%04X:%04X\r\n", ((uint16_t)tmp_array[12] << 8) | ((uint16_t)tmp_array[13]),
+			((uint16_t)tmp_array[14] << 8) | ((uint16_t)tmp_array[15]));
 
 
-	     printf("\r\nNETCFGLOCK : %x\r\n", getNETLCKR());
+	printf("\r\nNETCFGLOCK : %x\r\n", getNETLCKR());
 }
