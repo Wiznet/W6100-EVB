@@ -1,3 +1,35 @@
+//* ****************************************************************************
+//! \file AddressAutoConfig.h
+//! \brief IPv6 AddressAutoConfig Header File.
+//! \version 1.0.0
+//! \date 2019/01/01
+//! \par  Revision history
+//!             <2019/01/01> 1st Release
+//! \author WIZnet
+//! \copyright
+//!
+//! Copyright (c)  2019, WIZnet Co., LTD.
+//!
+//! Permission is hereby granted, free of charge, to any person obtaining a copy
+//! of this software and associated documentation files (the "Software"), to deal
+//! in the Software without restriction, including without limitation the rights 
+//! to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//! copies of the Software, and to permit persons to whom the Software is 
+//! furnished to do so, subject to the following conditions: 
+//!
+//! The above copyright notice and this permission notice shall be included in
+//! all copies or substantial portions of the Software. 
+//!
+//! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//! IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//! SOFTWARE. 
+//!
+//*****************************************************************************
+
 #ifndef _ADDRESSAUTOCONFIG_
 #define _ADDRESSAUTOCONFIG_
 
@@ -31,10 +63,57 @@
 #define RAO_MTU		 5
 #define RAO_RDNS	25
 
+/**
+ * @brief 
+ * 
+ * @param netinfo 
+ * @return uint8_t 
+ */
+uint8_t AddressAutoConfig_Init(wiz_NetInfo* netinfo);
+
+/**
+ * @brief 
+ * 
+ * @param mac_addr 
+ * @param Link_Local_Addr 
+ */
 void Generate_EUI64(uint8_t *mac_addr, uint8_t *Link_Local_Addr);
+
+/**
+ * @brief 
+ * 
+ * @param netinfo 
+ * @return uint8_t 
+ */
 uint8_t Duplicate_Address_Detection(wiz_NetInfo* netinfo);
+
+/**
+ * @brief 
+ * 
+ * @param sn 
+ * @param icmpbuf 
+ * @param buf_size 
+ * @param netinfo 
+ * @return uint8_t 
+ */
 uint8_t Address_Auto_Config_RA(uint8_t sn, uint8_t *icmpbuf, uint16_t buf_size, wiz_NetInfo* netinfo);
+
+/**
+ * @brief 
+ * 
+ * @param sn 
+ * @param test_buf 
+ * @return uint8_t 
+ */
 uint8_t Address_Auto_Config_SLDHCP(uint8_t sn, uint8_t* test_buf);
-uint8_t Address_Auto_Config_SFDHCP(uint8_t sn, uint8_t* test_buf);
+
+/**
+ * @brief 
+ * 
+ * @param sn 
+ * @param test_buf 
+ * @return uint8_t 
+ */
+uint8_t Address_Auto_Config_SFDHCP(uint8_t sn, uint8_t* test_buf, wiz_NetInfo* netinfo);
 
 #endif // _ADDRESSAUTOCONFIG_

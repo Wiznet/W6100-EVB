@@ -11,21 +11,20 @@
 #include "loopback.h"
 #include "AddressAutoConfig.h"
 
-// Taylor
 wiz_NetInfo gWIZNETINFO = { .mac = {
 								0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 								},
 							.ip = {
-								192, 168, 0, 4
+								192, 168, 100, 140
 							},
 							.sn = {
-								255, 255, 0, 0
+								255, 255, 255, 0
 							},
 							.gw = {
-								192, 168, 0, 1
+								192, 168, 100, 1
 							},
 							.dns = {
-								192, 168, 0, 1
+								192, 168, 100, 1
 							},
 							.lla={
 								0, 0, 0, 0,
@@ -91,7 +90,6 @@ uint16_t WIZ_Dest_PORT = 15000;                                 //DST_IP port
 /*******************IPv6  ADDRESS**************************/
 //////////////////////////////////////////////////////////////////////
 
-uint8_t MO_flag;
 uint8_t Zero_IP[16] = {0x00, };
 
 #define ETH_MAX_BUF_SIZE	1024
@@ -111,8 +109,6 @@ uint8_t bRandomPacket = 0;
 uint8_t bAnyPacket = 0;
 uint16_t pack_size = 0;
 
-static uint8_t data_buf[2048] ={0,};
-
 void print_network_information(void);
 
 int main(void)
@@ -121,7 +117,6 @@ int main(void)
 	volatile int j,k;
  	uint16_t ver=0;
  	uint16_t curr_time = 0;
- 	uint8_t result_aac=0;
 	uint8_t syslock = SYS_NET_LOCK;
 	uint8_t svr_ipv4[4] = {192, 168, 177, 235};
 	uint8_t svr_ipv6[16] = {0xfe, 0x80, 0x00, 0x00,
@@ -174,72 +169,11 @@ int main(void)
 	ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
 	print_network_information();
 
-	// DAD LLA
-	printf("Duplicate_Address_Detection\r\n");
-	Duplicate_Address_Detection(&gWIZNETINFO);
-	ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
-	print_network_information();
-
-	// RSRA
-	printf("Address_Auto_Configuration Start");
-	MO_flag = Address_Auto_Config_RA(0, data_buf, sizeof(data_buf), &gWIZNETINFO);
-	ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
-	print_network_information();
-
-	if(MO_flag == SLAAC_RDNSS)
+	// Auto Set IPv6
+	if(1 != AddressAutoConfig_Init(&gWIZNETINFO))
 	{
-		// Completed
-
-		printf("Address_Auto_Configuration Succeed\r\n");
-		result_aac = 1;
-	}
-	else if(MO_flag == SLAAC_DHCP6)
-	{
-		// Need Stateless DHCP
-		// Get Other Information
-
-		printf("Address_Auto_Configuration Failed\r\n");
-		printf("Stateless DHCP Start\r\n");
-
-		result_aac = Address_Auto_Config_SLDHCP(0, data_buf);
-		if(result_aac == 1)
-		{
-			printf(" Stateless DHCP Succeed\r\n");
-		}
-		else
-		{
-			printf(" Stateless DHCP Failed\r\n");
-		}
-		
-	}
-	else if(MO_flag == SFAAC_DHCP6)
-	{
-		// Need Stateful DHCP
-		// Get Managed Information
-
-		printf("Address_Auto_Configuration Failed\r\n");
-		printf("Stateful DHCP Start\r\n");
-
-		result_aac = Address_Auto_Config_SFDHCP(0, data_buf);
-		if(result_aac == 1)
-		{
-			printf("Stateful DHCP Succeed\r\n");
-		}
-		else
-		{
-			printf("Stateful DHCP Failed\r\n");
-		}
-	}
-	else 
-	{
-		printf("Address_Auto_Configuration Failed MO_Flag : 0x%x\r\n", MO_flag);
-		result_aac = 0;
-	}
-
-	if(result_aac != 1)
-	{
+		// Manual Set IPv6
 		gWIZNETINFO = gWIZNETINFO_M;
-		// Manual Set IP
 		ctlnetwork(CN_SET_NETINFO,&gWIZNETINFO);
 	}
 
@@ -274,7 +208,7 @@ void print_network_information(void)
     uint8_t tmp_array[16];
     uint8_t i;
 	wizchip_getnetinfo(&gWIZNETINFO);
-	printf("Mac address: %02x:%02x:%02x:%02x:%02x:%02x\n\r",gWIZNETINFO.mac[0],gWIZNETINFO.mac[1],gWIZNETINFO.mac[2],gWIZNETINFO.mac[3],gWIZNETINFO.mac[4],gWIZNETINFO.mac[5]);
+	printf("Mac address: %02x:%02x:%02x:%02x:%02x:%02x\r\n",gWIZNETINFO.mac[0],gWIZNETINFO.mac[1],gWIZNETINFO.mac[2],gWIZNETINFO.mac[3],gWIZNETINFO.mac[4],gWIZNETINFO.mac[5]);
 	printf("IP address : %d.%d.%d.%d\n\r",gWIZNETINFO.ip[0],gWIZNETINFO.ip[1],gWIZNETINFO.ip[2],gWIZNETINFO.ip[3]);
 	printf("SM Mask	   : %d.%d.%d.%d\n\r",gWIZNETINFO.sn[0],gWIZNETINFO.sn[1],gWIZNETINFO.sn[2],gWIZNETINFO.sn[3]);
 	printf("Gate way   : %d.%d.%d.%d\n\r",gWIZNETINFO.gw[0],gWIZNETINFO.gw[1],gWIZNETINFO.gw[2],gWIZNETINFO.gw[3]);
@@ -286,7 +220,7 @@ void print_network_information(void)
     		((uint16_t)tmp_array[6] << 8) | ((uint16_t)tmp_array[7]));
     printf(":%04X:%04X", ((uint16_t)tmp_array[8] << 8) | ((uint16_t)tmp_array[9]),
     		((uint16_t)tmp_array[10] << 8) | ((uint16_t)tmp_array[11]));
-    printf(":%04X:%04X\r\n ", ((uint16_t)tmp_array[12] << 8) | ((uint16_t)tmp_array[13]),
+    printf(":%04X:%04X\r\n", ((uint16_t)tmp_array[12] << 8) | ((uint16_t)tmp_array[13]),
     		((uint16_t)tmp_array[14] << 8) | ((uint16_t)tmp_array[15]));
 
 	getLLAR(tmp_array);
