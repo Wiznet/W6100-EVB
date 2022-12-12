@@ -1,0 +1,68 @@
+/**
+ * \mainpage io6Library
+ *  <table width=0 >
+ *   <tr><td>@image html io6Library_logo_big.png</td></tr>
+ *  </table>
+ *
+ * <h2> Overview </h2>
+ *  
+ *
+ *  <b>io6Library</b> provides a useful library in order to integrate user application program  with WIZnet <b>dual stack</b> chips such as @b W6100. \n
+ *  It is easy to change the enhanced WIZnet chips, so user can migrate and integrate easily user application.\n\n 
+ *  Enjoy io6Library!!! \n\n
+ *
+ * <h2> Contents </h2>
+ *
+ *  This document contains two register groups, the dependent chip I/O functions, and the integrated chip control functions.
+ *  - Register Group 
+ *     - W6100 : @ref WIZCHIP_register_W6100
+ *        - Common register Group : @ref Common_register_group_W6100
+ *        - SOCKET register Group : @ref Socket_register_group_W6100
+ *  - The dependent chip I/O functions
+ *     - W6100 : @ref WIZCHIP_IO_Functions_W6100
+ *       - Basic IO function : @ref Basic_IO_function_W6100, 
+ *       - Common register access function : @ref Common_register_access_function_W6100 
+ *       - Socket register access function : @ref Socket_register_group_W6100
+ *  - The integrated chip control function 
+ *     - WIZnet SOCKET APIs : @ref WIZnet_socket_APIs
+ *     - WIZnet Extra function : @ref extra_functions \n\n
+ *
+ *
+ * <h2> Todo : How to use io6Library </h2>
+ *
+ *  As belows should be defined or implemented by user becase they are dependent on user HOST MCU.
+ *  - @ref _WIZCHIP_ : Select a dual stack TCP/Ip chips.  
+ *  - @ref _WIZCHIP_IO_MODE_ : Define your HOST interface. 
+ *     - @ref _WIZCHIP_IO_BASE_ : Define the address map of WIZnet chip as your system memory address map when you use a parallel BUS interface. Otherwize, it should be zero.
+ *  - @ref _WIZCHIP_T_ : Make your basic io function and Register them to @ref _WIZCHIP_T_.
+ *     -  @ref _WIZCHIP_T_::CRIS   : Criticail Section function 
+ *        - Make your critcial section functions to protect @ref _WIZCHIP_ IO access against interference such like as interrupt or task switching.
+ *        - Register them by calling @ref reg_wizchip_cris_cbfunc()
+ *     -  @ref _WIZCHIP_T_::CS : WIZnet chip select
+ *        - Make your chip selection or deselection functions when you want to use another host interface than parallel BUS interface.
+ *        - Register them by calling @ref reg_wizchip_cs_cbfunc()  
+ *     -  @ref _WIZCHIP_T_::IF : Basic IO functions (@ref _WIZCHIP_T_::_IF::BUS or @ref _WIZCHIP_T_::_IF::SPI)
+ *        - Make your basic IO functions to read or write @ref _WIZCHIP_ chip register. When you use parallel BUS interface, the unit is @ref iodata_t. Otherwize, the unit is byte(uint8_t)
+ *        - Register them by calling @ref reg_wizchip_bus_cbfunc() in the parallel BUS interface, or by calling @ref reg_wizchip_spi_cbfunc() in the serial BUS interface.  \n\n
+ *
+ *
+ * <h2> WIZnet Extra funcion </h2>
+ *  
+ *  WIZnet Extra fucnions(@ref extra_functions) makes your applications easy to use and ease to integrate regardless of @ref _WIZCHIP_. \n
+ *  But, they increases the code size of io6Library. If you want to use lightweight io6Library, they may be removed or not called.
+ *  Because they can all be replaced with <b>the dependent chip I/O functions</b> as mentioned the above.  \n\n   
+ *
+ * <h2> Available WIZCHIP product </h2>
+ *  <table width=0 >
+ *  <tr> <td>@image html w6100.png </td> </tr>
+ *  </table>
+ *
+ *  - W6100    \n\n
+ *
+ *
+ * <h2> Release Notes </h2>
+ *  - 2019/01/15 
+ *     - First Released V1.0.0
+ * 
+ *  
+ */
