@@ -25,6 +25,10 @@
 #include "loopback.h"
 #include "board_init.h"
 #include "AddressAutoConfig.h"
+#if 1
+// 20230726 taylor
+#include "ping.h"
+#endif
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,6 +38,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+// 20230725 taylor
+#if 1
+#define TEST_MACRAW
+#endif
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,9 +60,16 @@ UART_HandleTypeDef huart1;
 wiz_NetInfo gWIZNETINFO = { .mac = {
 								0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 							},
+							#if 1
+              // 20230726 taylor
+							.ip = {
+								192, 168, 50, 162
+							},
+              #else
 							.ip = {
 								192, 168, 111, 107
 							},
+							#endif
 							.sn = {
 								255, 255, 255, 0
 							},
@@ -91,7 +106,12 @@ wiz_NetInfo gWIZNETINFO = { .mac = {
 };
 
 wiz_NetInfo gWIZNETINFO_M = { .mac = {0x00,0x08,0xdc,0xFF,0xFF,0xFF},
+#if 1
+// 20230726 taylor
+              .ip = {192,168,50,162},
+#else
 							.ip = {192,168,11,107},
+#endif
 							.sn = {255, 255, 255, 0},
 							.gw = {192, 168, 11, 1},
 							.dns = {8, 8, 8, 8},
@@ -172,7 +192,12 @@ int main(void)
  	uint16_t ver=0;
  	uint16_t curr_time = 0;
 	uint8_t syslock = SYS_NET_LOCK;
+  #if 0
+  // 20230726 taylor
+  uint8_t svr_ipv4[4] = {192, 168, 50, 162};
+  #else
 	uint8_t svr_ipv4[4] = {192, 168, 177, 235};
+  #endif
 	uint8_t svr_ipv6[16] = {0xfe, 0x80, 0x00, 0x00,
 							0x00, 0x00, 0x00, 0x00,
 							0xc1, 0x0b, 0x0a, 0xdf,
@@ -203,6 +228,9 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   printf("\r\n syatem start \r\n");
+#if 1
+  printf("Compiled @ %s %s\r\n", __DATE__, __TIME__);
+#endif
 
   W6100Initialze();
 
@@ -211,6 +239,9 @@ int main(void)
 
   printf("Register value after W6100 initialize!\r\n");
 
+  #if 0
+  // 20230726 taylor
+  #else
   /* Address Auto Configuration */
   	if(1 != AddressAutoConfig_Init(&gWIZNETINFO))
   	{
@@ -218,19 +249,60 @@ int main(void)
   		gWIZNETINFO = gWIZNETINFO_M;
   		ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
   	}
+  #endif
 
 
   print_network_information();
+
+  // 20230725 MACRAW
+  #ifdef TEST_MACRAW
+  // https://wizconfluence.atlassian.net/wiki/spaces/TP/pages/279375/IP01-+ICMP+TEST
+
+  printf("Start TEST_IPRAW\r\n");
+
+  // ICMP6 58
+  // ICMP 1
+
+  #if 1
+  // IPv6
+  //2001:470:1f04:6ff:64bf:3d06:f6ab:b9f5
+  // fe80::768e:1eaa:4b74:b98e
+  uint8_t pDestaddr[16] = {
+  #if 1
+
+  #endif
+    }; //Destination Device IP
+
+  //request_flag = 0;   //Send Request ping from outside to Ethernet Chip (W5100S)
+  uint8_t request_flag = 1;   //Send Request ping from Ethernet CHIP(W5100S) to outside.
+
+  uint32_t return_len = ping6_auto(0, pDestaddr, request_flag);
+  #else
+  uint8_t pDestaddr[4] = {192, 168, 50, 152}; //Destination Device IP
+
+  //request_flag = 0;   //Send Request ping from outside to Ethernet Chip (W5100S)
+  uint8_t request_flag = 1;   //Send Request ping from Ethernet CHIP(W5100S) to outside.
+
+  uint32_t return_len = ping_auto(0, pDestaddr, request_flag);
+  #endif
+
+  printf("\r\n ping_auto return value: %d", return_len);
+
+  printf("\t>Done TEST_IPRAW\r\n");
+  #endif
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	    loopback_udps(0,ethBuf0,50000,AS_IPV4);
+  #if 0
+    loopback_udps(0,ethBuf0,50000,AS_IPV4);
 		loopback_tcps(1,ethBuf3,50003,AS_IPV4);
 		loopback_tcps(2,ethBuf4,50004,AS_IPV6);
 		loopback_tcps(3,ethBuf5,50005,AS_IPDUAL);
+  #endif
 
     /* USER CODE END WHILE */
 
