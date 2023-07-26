@@ -29,6 +29,10 @@ uint8_t ping_reply_received = 0;
 uint8_t req=0;
 uint8_t rep=0;
 
+#if 1
+// 20230726 taylor
+extern wiz_NetInfo gWIZNETINFO;
+#endif
 
 /*****************************************************************************************
 	Function name: wait_1us
@@ -469,6 +473,9 @@ uint8_t ping6_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 						{
 							if((len = getSn_RX_RSR(s)) > 0)
 							{
+							  #if 1
+                printf("%s : %d\r\n", __FILE__, __LINE__);
+                #endif
 								ping6_reply(s, addr, len, request_flag);
 								rep++;
 								if(ping_reply_received)
@@ -561,7 +568,31 @@ uint8_t ping6_request(uint8_t s, uint8_t *addr){
   	printf("\r\n=========================\r\n");
 	/* Do checksum of Ping Request */
 	PingRequest.CheckSum = 0;		               	// value of checksum before calculating checksum of ping-request packet
-	PingRequest.CheckSum = htons(checksum((uint8_t*)&PingRequest,sizeof(PingRequest)));  // Calculate checksum
+
+  CSUM Pseudo;
+  
+  // Source Address
+  memcpy(Pseudo.Src, gWIZNETINFO.gua, 16);
+  memcpy(Pseudo.Dst, addr, 16);
+  Pseudo.Next[0] = 0x00;
+  Pseudo.Next[1] = 0x3A;
+  Pseudo.Len_icmp6[0] = (sizeof(PingRequest)&0xff00)>>8;
+  Pseudo.Len_icmp6[1] = sizeof(PingRequest)&0xff;
+
+  #if 1
+  memcpy(&(Pseudo.Icmpv6), &PingRequest, sizeof(PingRequest));
+  #else
+  Pseudo.Icmpv6.Type = PingRequest.Type;
+  Pseudo.Icmpv6.Code = PingRequest.Code;
+  Pseudo.Icmpv6.CheckSum = 0;
+  Pseudo.Icmpv6.ID = PingRequest.ID;
+  Pseudo.Icmpv6.SeqNum = PingRequest.SeqNum;
+  Pseudo.Icmpv6.Data
+  #endif
+
+  
+  
+  PingRequest.CheckSum = htons(checksum6((uint8_t*)&Pseudo,sizeof(Pseudo)));  // Calculate checksum
 
   #if 1
   // 20230726 taylor
@@ -608,6 +639,7 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 
 	 int32_t  send_rep;
 	 PINGMSGR PingReply;
+   CSUM Pseudo;
 
   #if 1
   // 20230726 taylor
@@ -785,6 +817,34 @@ uint16_t checksum(uint8_t * data_buf, uint16_t len)
 
 }
 
+uint16_t checksum6(uint8_t * data_buf, uint16_t len)
+
+{
+  uint32_t sum = 0;
+  uint16_t data;
+
+  printf("len = %d\n", len);
+
+  for (int i = 0; i < len; i+=2)
+  {
+    data = data_buf[i]<<8 | data_buf[i+1];
+      
+    printf("before sum = %x\n", sum);
+    printf("data[%d] = %x\n", i, data);
+    sum += data;
+    printf("after sum = %x\n\n", sum);
+  }
+  
+  while (sum >> 16)
+  {
+    sum = (sum & 0xffff) + (sum >> 16);
+  }
+
+  printf("sum = %x\n", sum);
+  printf("~sum = %x\n", ~sum);
+  
+  return ~sum;
+}
 
 uint16_t htons( uint16_t hostshort)
 {

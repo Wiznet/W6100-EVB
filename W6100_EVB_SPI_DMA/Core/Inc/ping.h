@@ -42,6 +42,19 @@ typedef struct pingmsg
   int8_t	 Data[BUF_LEN];// Ping Data  : 1452 = IP RAW MTU - sizeof(Type+Code+CheckSum+ID+SeqNum)
 } PINGMSGR;
 
+#if 1
+// 20230726 taylor
+typedef struct csum
+{
+  uint8_t Src[16];
+  uint8_t Dst[16];
+  uint8_t Next[2];
+  uint8_t Len_icmp6[2];
+  PINGMSGR Icmpv6;
+} CSUM;
+
+#endif
+
 
 uint8_t ping_auto(uint8_t s, uint8_t *addr, uint8_t request_flag);
 uint8_t ping_count(uint8_t s, uint16_t pCount, uint8_t *addr);
@@ -55,4 +68,8 @@ uint8_t ping6_request(uint8_t s, uint8_t *addr);
 uint8_t ping6_reply(uint8_t s,  uint8_t *addr, uint16_t rlen, uint8_t request_flag);
 #endif
 uint16_t checksum(uint8_t * data_buf, uint16_t len);
+#if 1
+// 20230726 taylor
+uint16_t checksum6(uint8_t * data_buf, uint16_t len);
+#endif
 uint16_t htons( uint16_t  hostshort);	/* htons function converts a unsigned short from host to TCP/IP network byte order (which is big-endian).*/
