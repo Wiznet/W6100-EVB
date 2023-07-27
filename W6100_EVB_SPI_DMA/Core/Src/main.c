@@ -237,7 +237,7 @@ int main(void)
   MX_SPI2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  printf("\r\n syatem start \r\n");
+  printf("\r\n system start \r\n");
 #if 1
   printf("Compiled @ %s %s\r\n", __DATE__, __TIME__);
 #endif
