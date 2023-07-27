@@ -29,6 +29,11 @@
 // 20230726 taylor
 #include "ping.h"
 #endif
+#if 1
+// 20230727 taylor
+#include "macraw.h"
+#endif
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +47,11 @@
 #if 1
 #define TEST_MACRAW
 #endif
+// 20230727 taylor
+#if 0
+#define TEST_IPRAW
+#endif
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -254,8 +264,122 @@ int main(void)
 
   print_network_information();
 
-  // 20230725 MACRAW
   #ifdef TEST_MACRAW
+
+  printf("Start TEST_MACRAW\r\n");
+
+  while(1)
+  {
+    uint16_t rxlen;
+    uint16_t len;
+    
+    rxlen = loopback_macraw(0, ethBuf0);
+    if(rxlen > 0)
+    {
+      printf("rxlen = %d\r\n", rxlen);
+
+      uint32_t i;
+
+      printf("dst MAC : ");
+      for(i=0; i<6; i++)
+      {
+        printf("%x", ethBuf0[i]);
+        
+        if(i!=5)
+        {
+          printf(":");
+        }
+      }
+      printf("\r\n");
+
+      printf("src MAC : ");
+      for(i=6; i<12; i++)
+      {
+        printf("%x", ethBuf0[i]);
+        
+        if(i!=11)
+        {
+          printf(":");
+        }
+      }
+      printf("\r\n");
+
+      printf("Type : %x %x\r\n", ethBuf0[12], ethBuf0[13]);
+
+      if(ethBuf0[12] == 0x08 && ethBuf0[13] == 0x00)
+      {
+        printf("Type IPv4\r\n");
+
+        #if 0
+        ethBuf0[14];ethBuf0[15];
+        
+        ethBuf0[16];ethBuf0[17];ethBuf0[18];ethBuf0[19];
+        ethBuf0[20];ethBuf0[21];ethBuf0[22];ethBuf0[23];
+
+        ethBuf0[24];ethBuf0[25];
+        #endif
+
+        printf("src IP : %d.%d.%d.%d\r\n", ethBuf0[26],ethBuf0[27],ethBuf0[28],ethBuf0[29]);
+        printf("dst IP : %d.%d.%d.%d\r\n", ethBuf0[30],ethBuf0[31],ethBuf0[32],ethBuf0[33]);
+      }
+      else if(ethBuf0[12] == 0x86 && ethBuf0[13] == 0xDD)
+      {
+        printf("Type IPv6\r\n");
+
+        #if 0
+        ethBuf0[14];ethBuf0[15];
+        
+        ethBuf0[16];ethBuf0[17];ethBuf0[18];ethBuf0[19];
+        ethBuf0[20];ethBuf0[21];
+        #endif
+
+        printf("src IPv6 : ");
+        for(i=22; i<38; i++)
+        {
+          printf("%x", ethBuf0[i]);
+          
+          if(i!=37)
+          {
+            printf(":");
+          }
+        }
+        printf("\r\n");
+
+        printf("dst IPv6 : ");
+        for(i=38; i<54; i++)
+        {
+          printf("%x", ethBuf0[i]);
+          
+          if(i!=53)
+          {
+            printf(":");
+          }
+        }
+        printf("\r\n");
+      }
+      else
+      {
+        printf("Type unknown\r\n");
+#if 0
+        printf("payload : ");
+        for(i=14; i<rxlen; i++)
+        {
+          printf("0x%x ", ethBuf0[i]);
+        }
+#endif
+        printf("\r\n");
+      }
+
+      
+      
+      printf("\r\n\r\n");
+    }
+  }
+  
+  #endif
+  
+  // 20230725 IPRAW
+  #ifdef TEST_IPRAW
   // https://wizconfluence.atlassian.net/wiki/spaces/TP/pages/279375/IP01-+ICMP+TEST
 
   printf("Start TEST_IPRAW\r\n");
