@@ -136,6 +136,17 @@ uint8_t ping_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 
 						while(1)
 						{
+#if 1
+// 20230727 taylor
+              len = getSn_RX_RSR(s);
+              if(len > 0)
+              {
+              #if 0
+                printf("%s(%d)\r\n len = %d\r\n", __FILE__, __LINE__, len);
+              #endif
+                ping_reply(s, addr, len, request_flag);
+              }
+#else
 							if((len = getSn_RX_RSR(s)) > 0)
 							{
 								ping_reply(s, addr, len, request_flag);
@@ -166,7 +177,7 @@ uint8_t ping_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 								}
 								cnt++;
 							}
-
+#endif
 						}
 						printf("len = %d \r\n", len);
 						printf("req = %d", req);
@@ -275,11 +286,26 @@ uint8_t ping_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fla
 	 int32_t  send_rep;
 	 PINGMSGR PingReply;
 
+   #if 1
+   // 20230727 taylor
+   uint8_t addrlen;
+   #endif
+
   #if 1
+  #if 1
+  // 20230727 taylor
+  len = recvfrom(s, (uint8_t *)data_buf,rlen,addr,(uint16_t*)&destport, &addrlen);
+  #else
   // 20230726 taylor
   len = recvfrom(s, (uint8_t *)data_buf,rlen,addr,(uint16_t*)&destport, 4);
+  #endif
   #else
 	 len = recvfrom(s, (uint8_t *)data_buf,rlen,addr,(uint16_t*)&destport);
+  #endif
+
+  #if 1
+  // 20230727 taylor
+  printf("%s(%d)\r\n len = %d\r\n", __FILE__, __LINE__, len);
   #endif
 
 	if(data_buf[0] == PING_REPLY)
@@ -473,7 +499,7 @@ uint8_t ping6_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 						{
 							if((len = getSn_RX_RSR(s)) > 0)
 							{
-							  #if 1
+							  #if 0
                 printf("%s : %d\r\n", __FILE__, __LINE__);
                 #endif
 								ping6_reply(s, addr, len, request_flag);
@@ -494,7 +520,13 @@ uint8_t ping6_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 							}
 							else
 							{
+#if 1
+                for(time_i = 0 ; time_i < 500; time_i++)
+                {
+                  for(time_j = 0 ; time_j < 100; time_j++);
+                }
 
+#else
 								for(time_i = 0 ; time_i < 5000; time_i++)
 								{
 									for(time_j = 0 ; time_j < 1000; time_j++)
@@ -502,6 +534,7 @@ uint8_t ping6_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 
 									}
 								}
+#endif
 								cnt++;
 							}
 
@@ -640,10 +673,19 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 	 int32_t  send_rep;
 	 PINGMSGR PingReply;
    CSUM Pseudo;
+   #if 1
+   // 20230727 taylor
+   uint8_t addrlen;
+   #endif
 
   #if 1
+  #if 1
+  // 20230727 taylor
+  len = recvfrom(s, (uint8_t *)data_buf,rlen,addr,(uint16_t*)&destport, &addrlen);
+  #else
   // 20230726 taylor
   len = recvfrom(s, (uint8_t *)data_buf,rlen,addr,(uint16_t*)&destport, 16);
+  #endif
   #else
 	 len = recvfrom(s, (uint8_t *)data_buf,rlen,addr,(uint16_t*)&destport);
   #endif
@@ -823,16 +865,22 @@ uint16_t checksum6(uint8_t * data_buf, uint16_t len)
   uint32_t sum = 0;
   uint16_t data;
 
+  #if 0
   printf("len = %d\n", len);
+  #endif
 
   for (int i = 0; i < len; i+=2)
   {
     data = data_buf[i]<<8 | data_buf[i+1];
-      
+
+    #if 0
     printf("before sum = %x\n", sum);
     printf("data[%d] = %x\n", i, data);
+    #endif
     sum += data;
+    #if 0
     printf("after sum = %x\n\n", sum);
+    #endif
   }
   
   while (sum >> 16)
@@ -840,8 +888,10 @@ uint16_t checksum6(uint8_t * data_buf, uint16_t len)
     sum = (sum & 0xffff) + (sum >> 16);
   }
 
+  #if 0
   printf("sum = %x\n", sum);
   printf("~sum = %x\n", ~sum);
+  #endif
   
   return ~sum;
 }

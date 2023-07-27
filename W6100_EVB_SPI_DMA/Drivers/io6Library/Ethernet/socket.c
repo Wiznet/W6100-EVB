@@ -434,7 +434,13 @@ datasize_t sendto(uint8_t sn, uint8_t * buf, datasize_t len, uint8_t * addr, uin
    return (int32_t)len;
 }
 
-
+#if 0
+#define PRINTLINE printf("%d\r\n", __LINE__)
+#define PRINTVAR(x) printf(#x" = %x(%d)\r\n", x, x)
+#else
+#define PRINTLINE
+#define PRINTVAR(x)
+#endif
 datasize_t recvfrom(uint8_t sn, uint8_t * buf, datasize_t len, uint8_t * addr, uint16_t *port, uint8_t *addrlen)
 { 
    uint8_t  head[2];
@@ -450,8 +456,10 @@ datasize_t recvfrom(uint8_t sn, uint8_t * buf, datasize_t len, uint8_t * addr, u
   
    if(sock_remained_size[sn] == 0)
    {
+   PRINTLINE;
       while(1)
       {
+      PRINTLINE;
          pack_len = getSn_RX_RSR(sn);
          if(getSn_SR(sn) == SOCK_CLOSED) return SOCKERR_SOCKCLOSED;
          if(pack_len != 0)
@@ -461,13 +469,17 @@ datasize_t recvfrom(uint8_t sn, uint8_t * buf, datasize_t len, uint8_t * addr, u
          } 
          if( sock_io_mode & (1<<sn) ) return SOCK_BUSY;
       };
+      PRINTLINE;
       /* First read 2 bytes of PACKET INFO in SOCKETn RX buffer*/
       wiz_recv_data(sn, head, 2);  
+      PRINTLINE;
       setSn_CR(sn,Sn_CR_RECV);
+      PRINTLINE;
       while(getSn_CR(sn));
+      PRINTLINE;
       pack_len = head[0] & 0x07;
       pack_len = (pack_len << 8) + head[1];
-    
+    PRINTLINE;
       switch (getSn_MR(sn) & 0x0F)
       {
          case Sn_MR_UDP4 :
@@ -475,17 +487,37 @@ datasize_t recvfrom(uint8_t sn, uint8_t * buf, datasize_t len, uint8_t * addr, u
          case Sn_MR_UDPD:
          case Sn_MR_IPRAW6:
          case Sn_MR_IPRAW4 : 
-            if(addr == 0) return SOCKERR_ARG;
+          PRINTLINE;
+            if(addr == 0)
+            {
+              PRINTLINE;
+              return SOCKERR_ARG;
+            }
             sock_pack_info[sn] = head[0] & 0xF8;
-            if(sock_pack_info[sn] & PACK_IPv6) *addrlen = 16;
-            else *addrlen = 4;
+            if(sock_pack_info[sn] & PACK_IPv6)
+            {
+              PRINTLINE;
+              *addrlen = 16;
+            }
+            else
+            {
+              PRINTLINE;
+              PRINTVAR(addrlen);
+              PRINTVAR(*addrlen);
+              *addrlen = 4;
+            }
+            PRINTLINE;
             wiz_recv_data(sn, addr, *addrlen);
+            PRINTLINE;
             setSn_CR(sn,Sn_CR_RECV);
+            PRINTLINE;
             while(getSn_CR(sn));
+            PRINTLINE;
             break;
          case Sn_MR_MACRAW :
             if(pack_len > 1514) 
             {
+            PRINTLINE;
                close(sn);
                return SOCKFATAL_PACKLEN;
             }
@@ -494,6 +526,7 @@ datasize_t recvfrom(uint8_t sn, uint8_t * buf, datasize_t len, uint8_t * addr, u
             return SOCKERR_SOCKMODE;
             break;
       }
+      PRINTLINE;
       sock_remained_size[sn] = pack_len;
       sock_pack_info[sn] |= PACK_FIRST;
       if((getSn_MR(sn) & 0x03) == 0x02)  // Sn_MR_UDP4(0010), Sn_MR_UDP6(1010), Sn_MR_UDPD(1110)
