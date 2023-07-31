@@ -23,6 +23,10 @@
 #endif
 
 #define PING_REPLY 0
+#if 1
+// 20230731 taylor
+#define PING6_REPLY 129
+#endif
 #define CODE_ZERO 0
 
 #define SOCKET_ERROR 1

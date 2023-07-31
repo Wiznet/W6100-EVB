@@ -145,6 +145,17 @@ uint8_t ping_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
                 printf("%s(%d)\r\n len = %d\r\n", __FILE__, __LINE__, len);
               #endif
                 ping_reply(s, addr, len, request_flag);
+                #if 1
+                // 20230731 taylor
+                rep++;
+								if(ping_reply_received)
+								{
+									printf("received!");
+									wait_ping_reply = 0;
+									printf("\r\n wait_ping_reply = %d\r\n", wait_ping_reply);
+									break;
+								}
+                #endif
               }
 #else
 							if((len = getSn_RX_RSR(s)) > 0)
@@ -477,12 +488,18 @@ uint8_t ping6_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 		/* Check socket register */
 				while(getSn_SR(s)!=SOCK_IPRAW6);
         #if 1
+        // 20230731 taylor
+        printf("getSn_SR(s) == SOCK_IPRAW6\r\n");
+        #endif
+        #if 0
+        #if 0
         // 20230726 taylor
         wait_10ms(1);
         #else
 					wait_10ms(10000); // wait 1000ms
 					wait_10ms(10000); // wait 1000ms
           #endif
+        #endif
 					break;
 			case SOCK_IPRAW6:
 				/* Modes for performing REQUEST in the MCU */
@@ -520,7 +537,8 @@ uint8_t ping6_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 							}
 							else
 							{
-#if 1
+							#if 0
+#if 0
                 for(time_i = 0 ; time_i < 500; time_i++)
                 {
                   for(time_j = 0 ; time_j < 100; time_j++);
@@ -534,6 +552,7 @@ uint8_t ping6_auto(uint8_t s, uint8_t *addr, uint8_t request_flag)
 
 									}
 								}
+#endif
 #endif
 								cnt++;
 							}
@@ -690,9 +709,86 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 	 len = recvfrom(s, (uint8_t *)data_buf,rlen,addr,(uint16_t*)&destport);
   #endif
 
+#if 1
+// 20230731 taylor
+  if(data_buf[0] == PING6_REPLY)
+#else
 	if(data_buf[0] == PING_REPLY)
+#endif
 	{
-		printf("PING_REPLY\r\n");
+		printf("PING6_REPLY\r\n");
+    #if 1
+    #if 0
+    printf( "Receive Ping Reply from Source\r\n") ;
+    printf( "0x%x:0x%x:0x%x:0x%x:",   (addr[0]),  (addr[1]),  (addr[2]),  (addr[3]));
+    printf( "0x%x:0x%x:0x%x:0x%x:",   (addr[4]),  (addr[5]),  (addr[6]),  (addr[7]));
+    printf( "0x%x:0x%x:0x%x:0x%x:",   (addr[8]),  (addr[9]),  (addr[10]),  (addr[11]));
+    printf( "0x%x:0x%x:0x%x:0x%x\r\n",   (addr[12]),  (addr[13]),  (addr[14]),  (addr[15]));
+    printf("Port 0x%x(%d)\r\n", destport, destport);
+    #endif
+
+    PingReply.Type 		 = data_buf[0];
+		PingReply.Code 		 = data_buf[1];
+		PingReply.CheckSum   = (data_buf[3]<<8) + data_buf[2];
+		PingReply.ID 		 = (data_buf[5]<<8) + data_buf[4];
+		PingReply.SeqNum 	 = (data_buf[7]<<8) + data_buf[6];
+		for(i=0; i<len-8 ; i++)
+		{
+			PingReply.Data[i] = data_buf[8+i];
+		}
+
+    CSUM Pseudo;
+
+    // Source Address
+    memcpy(Pseudo.Src, addr, 16);
+    memcpy(Pseudo.Dst, gWIZNETINFO.gua, 16);
+    Pseudo.Next[0] = 0x00;
+    Pseudo.Next[1] = 0x3A;
+    Pseudo.Len_icmp6[0] = (sizeof(PingReply)&0xff00)>>8;
+    Pseudo.Len_icmp6[1] = sizeof(PingReply)&0xff;
+    memcpy(&(Pseudo.Icmpv6), &PingReply, sizeof(PingReply));
+    Pseudo.Icmpv6.CheckSum = 0;
+    #endif
+    
+    #if 0
+    // 20230731 taylor
+    CSUM Pseudo;
+  
+    // Source Address
+    memcpy(Pseudo.Src, gWIZNETINFO.gua, 16);
+    memcpy(Pseudo.Dst, addr, 16);
+    Pseudo.Next[0] = 0x00;
+    Pseudo.Next[1] = 0x3A;
+    Pseudo.Len_icmp6[0] = (sizeof(PingRequest)&0xff00)>>8;
+    Pseudo.Len_icmp6[1] = sizeof(PingRequest)&0xff;
+
+    #if 1
+    memcpy(&(Pseudo.Icmpv6), &PingRequest, sizeof(PingRequest));
+    #else
+    Pseudo.Icmpv6.Type = PingRequest.Type;
+    Pseudo.Icmpv6.Code = PingRequest.Code;
+    Pseudo.Icmpv6.CheckSum = 0;
+    Pseudo.Icmpv6.ID = PingRequest.ID;
+    Pseudo.Icmpv6.SeqNum = PingRequest.SeqNum;
+    Pseudo.Icmpv6.Data
+    #endif
+
+    
+    
+    PingRequest.CheckSum = htons(checksum6((uint8_t*)&Pseudo,sizeof(Pseudo)));  // Calculate checksum
+    #endif
+
+    #if 1
+    /* check Checksum of Ping Reply */
+		tmp_checksum = checksum6(&Pseudo,sizeof(Pseudo));
+    #if 0
+    printf("tmp_checksum = %x\r\n",tmp_checksum);
+    for(i=0; i<sizeof(Pseudo); i++)
+    {
+      printf("Pseudo[%d] = 0x%x\r\n", i, *(((uint8_t*)&Pseudo)+i));
+    }
+    #endif
+    #else
 		PingReply.Type 		 = data_buf[0];
 		PingReply.Code 		 = data_buf[1];
 		PingReply.CheckSum   = (data_buf[3]<<8) + data_buf[2];
@@ -704,19 +800,80 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 		}
 
 		/* check Checksum of Ping Reply */
-		tmp_checksum = ~checksum(&data_buf,len);
+		tmp_checksum = ~checksum6(&data_buf,len);
+    #endif
 
 		/* Operation for comparing CheckSum */
-		comp_reply_checksum = (data_buf[3]<<8) + data_buf[2];
+		comp_reply_checksum = (data_buf[2]<<8) + data_buf[3];
+    #if 0
+    // 20230731 taylor
+    printf("comp_reply_checksum = 0x%x\r\n", comp_reply_checksum);
+    #endif
+    #if 0
+    // 20230731 taylor
 		comp_reply_checksum = comp_reply_checksum >> 8;
+    #if 1
+    // 20230731 taylor
+    printf("comp_reply_checksum = 0x%x\r\n", comp_reply_checksum);
+    #endif
 		comp_request_checksum = PingRequest.CheckSum >> 8;
+    #if 1
+    // 20230731 taylor
+    printf("PingRequest.CheckSum = 0x%x\r\n", PingRequest.CheckSum);
+    printf("comp_request_checksum = 0x%x\r\n", comp_request_checksum);
+    #endif
+    #endif
 
-
+    #if 0
+    // 20230731 taylor
 		PingReply.CheckSum = 0;
+    #if 1
+    // 20230731 taylor
+    PingReply.CheckSum = htons(checksum6((uint8_t*)&PingReply,sizeof(PingReply)));
+    #else
 		PingReply.CheckSum = htons(checksum((uint8_t*)&PingReply,sizeof(PingReply)));
+    #endif
+    #endif
 
+    #if 0
+    // 20230731 taylor
+    printf("PingRequest.SeqNum = 0x%x\r\n", PingRequest.SeqNum);
+    printf("PingReply.SeqNum = 0x%x\r\n", PingReply.SeqNum);
+    #endif
 		if(PingRequest.SeqNum == PingReply.SeqNum)
 		{
+		#if 1
+      #if 0
+      printf("tmp_checksum = 0x%x\r\n", tmp_checksum);
+      printf("comp_reply_checksum = 0x%x\r\n", comp_reply_checksum);
+      #endif
+      /*  Compare Checksum of Ping Reply and Ping Request */
+      if(tmp_checksum == comp_reply_checksum)
+      {
+        /*  Output the Destination IP and the size of the Ping Reply Message  */
+        #if 1
+        // 20230731 taylor
+        printf("Reply from ");
+        printf( "0x%x:0x%x:0x%x:0x%x:",   (addr[0]),  (addr[1]),  (addr[2]),  (addr[3]));
+        printf( "0x%x:0x%x:0x%x:0x%x:",   (addr[4]),  (addr[5]),  (addr[6]),  (addr[7]));
+        printf( "0x%x:0x%x:0x%x:0x%x:",   (addr[8]),  (addr[9]),  (addr[10]),  (addr[11]));
+        printf( "0x%x:0x%x:0x%x:0x%x ",   (addr[12]),  (addr[13]),  (addr[14]),  (addr[15]));
+        printf("ID:0x%x SeqNum:0x%x  :data size %d bytes  CheckSum 0x%x\r\n", htons(PingReply.ID), htons(PingReply.SeqNum), (rlen+6), PingReply.CheckSum);
+        #else
+        printf("Reply from %d.%d.%d.%d  ID:%x SeqNum:%x  :data size %d bytes  CheckSum %x\r\n",
+        (addr[0]),  (addr[1]),  (addr[2]),  (addr[3]),  htons(PingReply.ID),  htons(PingReply.SeqNum),  (rlen+6), PingReply.CheckSum );
+        printf("\r\n");
+        #endif
+
+        /*  SET ping_reply_receiver to '1' and go out the while_loop (waiting for ping reply)  */
+        ping_reply_received =1;
+      }
+      else
+      {
+        error_CheckSum++;
+        printf("\r\n Error CheckSum\r\n");
+      }
+    #else
 			if(tmp_checksum != 0xffff)
 				printf("tmp_checksum = %x\r\n",tmp_checksum);
 			else
@@ -738,6 +895,7 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 					printf("\r\n Error CheckSum\r\n");
 				}
 			}
+    #endif
 		}
 		else
 		{
@@ -746,9 +904,14 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 		}
 	}
 
+#if 1
+  // 20230731 taylor
+  else if(data_buf[0] == PING6_REQUEST)
+#else
 	else if(data_buf[0] == PING_REQUEST)
+#endif
 	{
-		printf("PING_REQUEST\r\n");
+		printf("PING6_REQUEST\r\n");
 		/*for comp checksum*/
 		PingReply.Type = data_buf[0];
 		PingReply.Code 	 = data_buf[1];
@@ -766,7 +929,12 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 
 		/* Calculate Checksum of Ping Reply */
 		PingReply.CheckSum = 0;
+    #if 1
+    // 20230731 taylor
+    PingReply.CheckSum = htons(checksum6((uint8_t*)&PingReply,sizeof(PingReply)));
+    #else
 		PingReply.CheckSum = htons(checksum((uint8_t*)&PingReply,sizeof(PingReply)));
+    #endif
 
 		printf("PingReply.CheckSum = %x \r\n", htons(PingReply.CheckSum));
 
@@ -796,7 +964,12 @@ uint8_t ping6_reply(uint8_t s, uint8_t *addr,  uint16_t rlen, uint8_t request_fl
 		tmp_checksum = PingReply.CheckSum;
 
 		PingReply.CheckSum = 0;
+    #if 1
+    // 20230731 taylor
+    PingReply.CheckSum = htons(checksum6((uint8_t*)&PingReply,sizeof(PingReply)));
+    #else
 		PingReply.CheckSum = htons(checksum((uint8_t*)&PingReply,sizeof(PingReply)));
+    #endif
 
 		/* sendto() is used to send data from the outside */
     #if 1
@@ -867,6 +1040,15 @@ uint16_t checksum6(uint8_t * data_buf, uint16_t len)
 
   #if 0
   printf("len = %d\n", len);
+  #if 1
+  // 20230731 taylor
+  uint32_t j;
+  for(j=0; j<len; j++)
+  {
+    printf("data_buf[%d] = 0x%x\r\n", j, data_buf[j]);
+  }
+  printf("\r\n\r\n");
+  #endif
   #endif
 
   for (int i = 0; i < len; i+=2)
