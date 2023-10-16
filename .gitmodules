@@ -1,3 +1,9 @@
 [submodule "Libraries/io6Library"]
 	path = Libraries/io6Library
 	url = https://github.com/Wiznet/io6Library.git
+[submodule "W6100_EVB_SPI_DMA/Drivers/ioLibrary"]
+	path = W6100_EVB_SPI_DMA/Drivers/ioLibrary
+	url = https://github.com/Wiznet-OpenHardware/ioLibrary.git
+[submodule "W6100_EVB_FSMC_DMA/Drivers/ioLibrary"]
+	path = W6100_EVB_FSMC_DMA/Drivers/ioLibrary
+	url = https://github.com/Wiznet-OpenHardware/ioLibrary.git

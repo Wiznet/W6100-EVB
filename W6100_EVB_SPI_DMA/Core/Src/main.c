@@ -25,6 +25,8 @@
 #include "loopback.h"
 #include "board_init.h"
 #include "AddressAutoConfig.h"
+#include "Internet/DHCP6/dhcpv6.h"
+#include "Internet/DHCP/dhcp.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,6 +36,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define ETH_MAX_BUF_SIZE	1024  // default socket buffer size is 2048 Kbytes
+
+// W6100 has 6 sockets(0 - 7).
+#define SOCKET_AAC 7
+#define SOCKET_DHCP 7
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,89 +53,66 @@ SPI_HandleTypeDef hspi2;
 DMA_HandleTypeDef hdma_spi2_rx;
 DMA_HandleTypeDef hdma_spi2_tx;
 
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-wiz_NetInfo gWIZNETINFO = { .mac = {
-								0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
-							},
-							.ip = {
-								192, 168, 111, 107
-							},
-							.sn = {
-								255, 255, 255, 0
-							},
-							.gw = {
-								192, 168, 11, 1
-							},
-							.dns = {
-								8, 8, 8, 8
-							},
-							.lla={
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0
-							},
-							.gua={
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0
-							},
-							.sn6={
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0
-							},
-							.gw6={
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0,
-								0, 0, 0, 0
-							}
-};
-
-wiz_NetInfo gWIZNETINFO_M = { .mac = {0x00,0x08,0xdc,0xFF,0xFF,0xFF},
-							.ip = {192,168,11,107},
+wiz_NetInfo gWIZNETINFO = {
+              .mac = {0x00, 0x08, 0xdc, 0xFF, 0xFF, 0xFF},
+							.ip = {192, 168, 111, 107},
 							.sn = {255, 255, 255, 0},
 							.gw = {192, 168, 11, 1},
 							.dns = {8, 8, 8, 8},
-							//.dhcp = NETINFO_STATIC,
 							.lla={
-									0x00,0x00, 0x00,0x00,
-									0x00,0x00, 0x00,0x00,
-								  },   ///< Source Link Local Address
-
-							.gua={0x00, 0x00, 0x00, 0x00,
-									0x00, 0x00, 0x00, 0x00,
-									0x00, 0x00, 0x00, 0x00,
-									0x00, 0x00, 0x00, 0x00},   ///< Source Global Unicast Address
-							.sn6={0xff,0xff,0xff,0xff,
-									0xff,0xff,0xff,0xff,
-									0x00, 0x00, 0x00, 0x00,
-									0x00, 0x00, 0x00, 0x00 },   ///< IPv6 Prefix
-							.gw6={0x00, 0x00, 0x00, 0x00,
-									0x00, 0x00, 0x00, 0x00,
-									0x00, 0x00, 0x00, 0x00,
-									0x00, 0x00, 0x00, 0x00}   ///< Gateway IPv6 Address
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00},   ///< Source Link Local Address
+							.gua={
+								0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00},   ///< Source Global Unicast Address
+							.sn6={
+								0xFF, 0xFF, 0xFF, 0xFF,
+                0xff, 0xFF, 0xFF, 0xFF,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00},   ///< IPv6 Prefix
+							.gw6={
+								0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00}   ///< Gateway IPv6 Address
 };
 
-uint8_t WIZ_Dest_IP_virtual[4] = {192, 168, 0, 230};               //DST_IP Address
-uint8_t WIZ_Dest_IP_Google[4]  = {216, 58, 200, 174};              //DST_IP Address
-
-uint8_t mcastipv4_0[4] ={239,1,2,3};
-uint8_t mcastipv4_1[4] ={239,1,2,4};
-uint8_t mcastipv4_2[4] ={239,1,2,5};
-uint8_t mcastipv4_3[4] ={239,1,2,6};
-
-uint16_t WIZ_Dest_PORT = 15000;                                 //DST_IP port
-
-#define ETH_MAX_BUF_SIZE	1024
-
-uint8_t  remote_ip[4] = {192,168,177,200};                      //
-uint16_t remote_port = 8080;
+wiz_NetInfo gWIZNETINFO_M = {
+              .mac = {0x00, 0x08, 0xdc, 0xFF, 0xFF, 0xFF},
+							.ip = {192, 168, 11, 107},
+							.sn = {255, 255, 255, 0},
+							.gw = {192, 168, 11, 1},
+							.dns = {8, 8, 8, 8},
+							.lla={
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00},   ///< Source Link Local Address
+							.gua={
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00},   ///< Source Global Unicast Address
+							.sn6={
+                0xFF, 0xFF, 0xFF, 0xFF,
+                0xff, 0xFF, 0xFF, 0xFF,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00},   ///< IPv6 Prefix
+							.gw6={
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00}   ///< Gateway IPv6 Address
+};
 
 unsigned char ethBuf0[ETH_MAX_BUF_SIZE];
 unsigned char ethBuf1[ETH_MAX_BUF_SIZE];
@@ -139,10 +123,6 @@ unsigned char ethBuf5[ETH_MAX_BUF_SIZE];
 unsigned char ethBuf6[ETH_MAX_BUF_SIZE];
 unsigned char ethBuf7[ETH_MAX_BUF_SIZE];
 
-uint8_t bLoopback = 1;
-uint8_t bRandomPacket = 0;
-uint8_t bAnyPacket = 0;
-uint16_t pack_size = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -151,8 +131,14 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 void print_network_information(void);
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+static void wizchip_dhcp_assign(void);
+static void wizchip_dhcp_conflict(void);
+void wizchip_dhcp_init(void);
+void print_ipv6_addr(const char* name, uint8_t* ip6addr);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -167,16 +153,14 @@ void print_network_information(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	volatile int i;
-	volatile int j,k;
- 	uint16_t ver=0;
- 	uint16_t curr_time = 0;
+ 	uint16_t ver = 0;
 	uint8_t syslock = SYS_NET_LOCK;
 	uint8_t svr_ipv4[4] = {192, 168, 177, 235};
-	uint8_t svr_ipv6[16] = {0xfe, 0x80, 0x00, 0x00,
-							0x00, 0x00, 0x00, 0x00,
-							0xc1, 0x0b, 0x0a, 0xdf,
-							0xea, 0xf4, 0xf4, 0x2d};
+	uint8_t svr_ipv6[16] = {
+    0xFE, 0x80, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0xC1, 0x0B, 0x0A, 0xDF,
+    0xEA, 0xF4, 0xF4, 0x2D};
 
   /* USER CODE END 1 */
 
@@ -201,36 +185,67 @@ int main(void)
   MX_DMA_Init();
   MX_SPI2_Init();
   MX_USART1_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  printf("\r\n syatem start \r\n");
 
+  printf("\r\n");
+  printf("======================================================\r\n");
+  printf("Compiled @ %s %s\r\n", __DATE__, __TIME__);
+  printf("W6100-EVB SPI\r\n");
+  printf("System start (%d Hz)\r\n", HAL_RCC_GetSysClockFreq());
+  printf("======================================================\r\n");
+
+  HAL_TIM_Base_Start_IT(&htim2);
   W6100Initialze();
 
-  ctlwizchip(CW_SYS_UNLOCK,& syslock);
-  ctlnetwork(CN_SET_NETINFO,&gWIZNETINFO);
+  ctlwizchip(CW_GET_VER, &ver);
+  printf("Chip ver = 0x%x\r\n", ver);
 
-  printf("Register value after W6100 initialize!\r\n");
+  ctlwizchip(CW_SYS_UNLOCK, &syslock);
+  ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
+
+  printf("Network Information\r\n");
+  print_network_information();
 
   /* Address Auto Configuration */
-  	if(1 != AddressAutoConfig_Init(&gWIZNETINFO))
-  	{
-  		// Manual Set IPv6
-  		gWIZNETINFO = gWIZNETINFO_M;
-  		ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
-  	}
+  if(1 != AddressAutoConfig_Init(SOCKET_AAC, &gWIZNETINFO))
+  {
+    // Manual Set IPv6
+    gWIZNETINFO = gWIZNETINFO_M;
+    ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
+  }
 
+  printf("DHCP init()\r\n");
+  wizchip_dhcp_init();
 
-  print_network_information();
+  printf("DHCP run()\r\n");
+  while (DHCP_run() != DHCP_IP_LEASED)
+  {
+      wiz_delay_ms(1000);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	    loopback_udps(0,ethBuf0,50000,AS_IPV4);
-		loopback_tcps(1,ethBuf3,50003,AS_IPV4);
-		loopback_tcps(2,ethBuf4,50004,AS_IPV6);
-		loopback_tcps(3,ethBuf5,50005,AS_IPDUAL);
+#if 1
+	  loopback_udps(0, ethBuf0, 50000, AS_IPV4);
+	  loopback_udps(1, ethBuf1, 50001, AS_IPV6);
+#endif
+
+#if 0
+	  loopback_tcpc(2, ethBuf2, svr_ipv4, 50002, AS_IPV4);
+	  loopback_tcpc(3, ethBuf3, svr_ipv6, 50003, AS_IPV6);
+#endif
+
+#if 1
+	  loopback_tcps(4, ethBuf4, 50004, AS_IPV4);
+	  loopback_tcps(5, ethBuf5, 50005, AS_IPV6);
+	  loopback_tcps(6, ethBuf6, 50006, AS_IPDUAL);
+#endif
+
+    DHCP_run();
 
     /* USER CODE END WHILE */
 
@@ -313,6 +328,51 @@ static void MX_SPI2_Init(void)
   /* USER CODE BEGIN SPI2_Init 2 */
 
   /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 7199;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 10000;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -410,11 +470,11 @@ void print_network_information(void)
 {
 	wizchip_getnetinfo(&gWIZNETINFO);
 
-	printf("Mac address: %02x:%02x:%02x:%02x:%02x:%02x\n\r",gWIZNETINFO.mac[0],gWIZNETINFO.mac[1],gWIZNETINFO.mac[2],gWIZNETINFO.mac[3],gWIZNETINFO.mac[4],gWIZNETINFO.mac[5]);
-	printf("IP address : %d.%d.%d.%d\n\r",gWIZNETINFO.ip[0],gWIZNETINFO.ip[1],gWIZNETINFO.ip[2],gWIZNETINFO.ip[3]);
-	printf("SM Mask    : %d.%d.%d.%d\n\r",gWIZNETINFO.sn[0],gWIZNETINFO.sn[1],gWIZNETINFO.sn[2],gWIZNETINFO.sn[3]);
-	printf("Gate way   : %d.%d.%d.%d\n\r",gWIZNETINFO.gw[0],gWIZNETINFO.gw[1],gWIZNETINFO.gw[2],gWIZNETINFO.gw[3]);
-	printf("DNS Server : %d.%d.%d.%d\n\r",gWIZNETINFO.dns[0],gWIZNETINFO.dns[1],gWIZNETINFO.dns[2],gWIZNETINFO.dns[3]);
+	printf("Mac address: %02x:%02x:%02x:%02x:%02x:%02x\r\n",gWIZNETINFO.mac[0],gWIZNETINFO.mac[1],gWIZNETINFO.mac[2],gWIZNETINFO.mac[3],gWIZNETINFO.mac[4],gWIZNETINFO.mac[5]);
+	printf("IP address : %d.%d.%d.%d\r\n",gWIZNETINFO.ip[0],gWIZNETINFO.ip[1],gWIZNETINFO.ip[2],gWIZNETINFO.ip[3]);
+	printf("SM Mask    : %d.%d.%d.%d\r\n",gWIZNETINFO.sn[0],gWIZNETINFO.sn[1],gWIZNETINFO.sn[2],gWIZNETINFO.sn[3]);
+	printf("Gate way   : %d.%d.%d.%d\r\n",gWIZNETINFO.gw[0],gWIZNETINFO.gw[1],gWIZNETINFO.gw[2],gWIZNETINFO.gw[3]);
+	printf("DNS Server : %d.%d.%d.%d\r\n",gWIZNETINFO.dns[0],gWIZNETINFO.dns[1],gWIZNETINFO.dns[2],gWIZNETINFO.dns[3]);
 
 	print_ipv6_addr("GW6 ", gWIZNETINFO.gw6);
 	print_ipv6_addr("LLA ", gWIZNETINFO.lla);
@@ -424,7 +484,7 @@ void print_network_information(void)
 	printf("\r\nNETCFGLOCK : %x\r\n", getNETLCKR());
 }
 
-void print_ipv6_addr(uint8_t* name, uint8_t* ip6addr)
+void print_ipv6_addr(const char* name, uint8_t* ip6addr)
 {
 	printf("%s : ", name);
 	printf("%04X:%04X", ((uint16_t)ip6addr[0] << 8) | ((uint16_t)ip6addr[1]), ((uint16_t)ip6addr[2] << 8) | ((uint16_t)ip6addr[3]));
@@ -433,6 +493,34 @@ void print_ipv6_addr(uint8_t* name, uint8_t* ip6addr)
 	printf(":%04X:%04X\r\n", ((uint16_t)ip6addr[12] << 8) | ((uint16_t)ip6addr[13]), ((uint16_t)ip6addr[14] << 8) | ((uint16_t)ip6addr[15]));
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	DHCP6_time_handler();
+	DHCP_time_handler();
+}
+
+static void wizchip_dhcp_assign(void)
+{
+  getIPfromDHCP(gWIZNETINFO.ip);
+  getGWfromDHCP(gWIZNETINFO.gw);
+  getSNfromDHCP(gWIZNETINFO.sn);
+  getDNSfromDHCP(gWIZNETINFO.dns);
+
+  ctlnetwork(CN_SET_NETINFO, &gWIZNETINFO);
+  printf("\r\n----------DHCP Net Information--------------\r\n");
+  print_network_information();
+}
+
+static void wizchip_dhcp_conflict(void)
+{
+	printf("wizchip_dhcp_conflict\r\n");
+}
+
+void wizchip_dhcp_init(void)
+{
+  DHCP_init(SOCKET_DHCP, ethBuf7);
+  reg_dhcp_cbfunc(wizchip_dhcp_assign, wizchip_dhcp_assign, wizchip_dhcp_conflict);
+}
 /* USER CODE END 4 */
 
 /**

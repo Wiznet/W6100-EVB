@@ -76,6 +76,9 @@ iodata_t W6100BusDmaReadByte(uint32_t addr);
 
 void W6100BusWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_inc);
 void W6100BusReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_inc);
+
+void XferCpltCallback_ch4(DMA_HandleTypeDef *hdma);
+void XferCpltCallback_ch5(DMA_HandleTypeDef *hdma);
 #endif
 
 void W6100Reset(void);

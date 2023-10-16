@@ -3,6 +3,15 @@
 #ifdef USE_STDPERIPH_DRIVER
 DMA_InitTypeDef		DMA_RX_InitStructure, DMA_TX_InitStructure;
 #elif defined USE_HAL_DRIVER
+#if defined BUS_DMA
+#if 0
+#define BUS_DMA_POL
+#else
+#define BUS_DMA_INT
+#endif
+extern uint8_t dma_ch4_comp;
+extern uint8_t dma_ch5_comp;
+#endif
 #endif
 void W6100Initialze(void)
 {
@@ -12,10 +21,12 @@ void W6100Initialze(void)
 /* SPI method callback registration */
 	#if defined SPI_DMA
 	printf("SPI DMA setting \r\n");
-	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, W6100SpiReadBurst, W6100SpiWriteBurst);
+	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte);
+	reg_wizchip_spiburst_cbfunc(W6100SpiReadBurst, W6100SpiWriteBurst);
 	#else
 	printf("no SPI DMA setting \r\n");
-	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte, 0, 0);
+	reg_wizchip_spi_cbfunc(W6100SpiReadByte, W6100SpiWriteByte);
+	reg_wizchip_spiburst_cbfunc(0,0);
 	#endif
 	/* CS function register */
 	reg_wizchip_cs_cbfunc(W6100CsEnable, W6100CsDisable);
@@ -23,10 +34,12 @@ void W6100Initialze(void)
 /* Indirect bus method callback registration */
 	#if defined BUS_DMA
 	printf("BUS DMA setting \r\n");
-	reg_wizchip_bus_cbfunc(W6100BusDmaReadByte, W6100BusDmaWriteByte, 0, 0);
+	reg_wizchip_bus_cbfunc(W6100BusDmaReadByte, W6100BusDmaWriteByte);
+	reg_wizchip_busbuf_cbfunc(W6100BusReadBurst, W6100BusWriteBurst);
 	#else
 	printf("no BUS DMA setting \r\n");
-	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte, 0, 0);
+	reg_wizchip_bus_cbfunc(W6100BusReadByte, W6100BusWriteByte);
+	reg_wizchip_busbuf_cbfunc(0, 0);
 	#endif
 #endif
 
@@ -188,12 +201,28 @@ iodata_t W6100BusReadByte(uint32_t addr)
 	return (*((volatile uint8_t*)(addr)));
 }
 
+#if defined BUS_DMA
+
 void W6100BusDmaWriteByte(uint32_t addr, iodata_t data)
 {
 #if defined USE_HAL_DRIVER
 	while (HAL_DMA_GetState(&W6100_DMA_TX) != HAL_DMA_STATE_READY);
+
+#ifdef BUS_DMA_INT
+	W6100_DMA_TX.XferCpltCallback = &XferCpltCallback_ch4;
 	HAL_DMA_Start_IT(&W6100_DMA_TX, &data, (uint32_t)addr, 1);
-	while (HAL_DMA_GetState(&W6100_DMA_TX) == HAL_DMA_STATE_RESET);
+	while(dma_ch4_comp != 1);
+	dma_ch4_comp = 0;
+
+#elif defined BUS_DMA_POL
+	HAL_DMA_Start(&W6100_DMA_TX, &data, (uint32_t)addr, 1);
+	HAL_StatusTypeDef status;
+	status = HAL_DMA_PollForTransfer(&W6100_DMA_TX, HAL_DMA_FULL_TRANSFER, 100);
+	if(status != HAL_OK)
+	{
+		printf("status = %d\r\n", status);
+	}
+#endif
 #endif
 }
 
@@ -203,9 +232,22 @@ iodata_t W6100BusDmaReadByte(uint32_t addr)
 	iodata_t ret;
 
 	while (HAL_DMA_GetState(&W6100_DMA_RX) != HAL_DMA_STATE_READY);
-	HAL_DMA_Start_IT(&W6100_DMA_RX, (uint32_t)addr, &ret, 1);
-	while (HAL_DMA_GetState(&W6100_DMA_RX) == HAL_DMA_STATE_RESET);
 
+#ifdef BUS_DMA_INT
+	W6100_DMA_RX.XferCpltCallback = &XferCpltCallback_ch5;
+	HAL_DMA_Start_IT(&W6100_DMA_RX, (uint32_t)addr, &ret, 1);
+	while(dma_ch5_comp != 1);
+	dma_ch5_comp = 0;
+
+#elif defined BUS_DMA_POL
+	HAL_DMA_Start(&W6100_DMA_RX, (uint32_t)addr, &ret, 1);
+	HAL_StatusTypeDef status;
+	status = HAL_DMA_PollForTransfer(&W6100_DMA_RX, HAL_DMA_FULL_TRANSFER, 100);
+	if(status != HAL_OK)
+	{
+		printf("status = %d\r\n", status);
+	}
+#endif
 	return ret;
 #endif
 }
@@ -214,12 +256,14 @@ void W6100BusWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_
 {
 #ifdef USE_STDPERIPH_DRIVER
 
-	if(addr_inc){
+	if(addr_inc)
+	{
 	 	DMA_TX_InitStructure.DMA_MemoryInc  = DMA_MemoryInc_Enable;
-
 	}
-	else 	DMA_TX_InitStructure.DMA_MemoryInc  = DMA_MemoryInc_Disable;
-
+	else
+	{
+		DMA_TX_InitStructure.DMA_MemoryInc  = DMA_MemoryInc_Disable;
+	}
 
 	DMA_TX_InitStructure.DMA_BufferSize = len;
 	DMA_TX_InitStructure.DMA_MemoryBaseAddr = addr;
@@ -227,14 +271,11 @@ void W6100BusWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_
 
 	DMA_Init(W6100_DMA_CHANNEL_TX, &DMA_TX_InitStructure);
 
-	DMA_Cmd(W6100_DMA_CHANNEL_TX, ENABLE);
-
 	/* Enable SPI Rx/Tx DMA Request*/
-
+	DMA_Cmd(W6100_DMA_CHANNEL_TX, ENABLE);
 
 	/* Waiting for the end of Data Transfer */
 	while(DMA_GetFlagStatus(DMA_TX_FLAG) == RESET);
-
 
 	DMA_ClearFlag(DMA_TX_FLAG);
 
@@ -242,8 +283,53 @@ void W6100BusWriteBurst(uint32_t addr, uint8_t* pBuf ,uint32_t len,uint8_t addr_
 
 #elif defined USE_HAL_DRIVER
 
+	// DMA Channel 4
+
+	HAL_DMA_DeInit(&W6100_DMA_TX);
+
+	W6100_DMA_TX.Init.PeriphInc = DMA_PINC_ENABLE;
+	if(addr_inc)
+	{
+		W6100_DMA_TX.Init.MemInc = DMA_MINC_ENABLE;
+	}
+	else
+	{
+		W6100_DMA_TX.Init.MemInc = DMA_MINC_DISABLE;
+	}
+
+	W6100_DMA_TX.Instance = DMA1_Channel4;
+	W6100_DMA_TX.Init.Direction = DMA_MEMORY_TO_MEMORY;
+	//W6100_DMA_TX.Init.PeriphInc = DMA_PINC_DISABLE;
+	//W6100_DMA_TX.Init.MemInc = DMA_MINC_ENABLE;
+	W6100_DMA_TX.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	W6100_DMA_TX.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	W6100_DMA_TX.Init.Mode = DMA_NORMAL;
+	W6100_DMA_TX.Init.Priority = DMA_PRIORITY_HIGH;
+
+#ifdef BUS_DMA_INT
+	W6100_DMA_TX.XferCpltCallback = &XferCpltCallback_ch4;
 #endif
 
+	if (HAL_DMA_Init(&W6100_DMA_TX) != HAL_OK)
+	{
+		Error_Handler( );
+	}
+
+	while (HAL_DMA_GetState(&W6100_DMA_TX) != HAL_DMA_STATE_READY);
+#ifdef BUS_DMA_POL
+	HAL_DMA_Start(&W6100_DMA_TX, pBuf, (uint32_t)addr, len);
+	HAL_StatusTypeDef status;
+	status = HAL_DMA_PollForTransfer(&W6100_DMA_TX, HAL_DMA_FULL_TRANSFER, 100);
+	if(status != HAL_OK)
+	{
+		printf("status = %d\r\n", status);
+	}
+#elif defined BUS_DMA_INT
+	HAL_DMA_Start_IT(&W6100_DMA_TX, pBuf, (uint32_t)addr, len);
+	while(dma_ch4_comp != 1);
+	dma_ch4_comp = 0;
+#endif
+#endif
 }
 
 void W6100BusReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_inc)
@@ -260,18 +346,51 @@ void W6100BusReadBurst(uint32_t addr,uint8_t* pBuf, uint32_t len,uint8_t addr_in
 	/* Waiting for the end of Data Transfer */
 	while(DMA_GetFlagStatus(DMA_RX_FLAG) == RESET);
 
-
 	DMA_ClearFlag(DMA_RX_FLAG);
-
 
 	DMA_Cmd(W6100_DMA_CHANNEL_RX, DISABLE);
 
 #elif defined USE_HAL_DRIVER
 
+	// DMA Channel 5
 
+	HAL_DMA_DeInit(&W6100_DMA_RX);
+
+	W6100_DMA_RX.Instance = DMA1_Channel5;
+	W6100_DMA_RX.Init.Direction = DMA_MEMORY_TO_MEMORY;
+	W6100_DMA_RX.Init.PeriphInc = DMA_PINC_DISABLE;
+	W6100_DMA_RX.Init.MemInc = DMA_MINC_ENABLE;
+	W6100_DMA_RX.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	W6100_DMA_RX.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	W6100_DMA_RX.Init.Mode = DMA_NORMAL;
+	W6100_DMA_RX.Init.Priority = DMA_PRIORITY_HIGH;
+
+#ifdef BUS_DMA_INT
+	W6100_DMA_RX.XferCpltCallback = &XferCpltCallback_ch5;
 #endif
 
+	if (HAL_DMA_Init(&W6100_DMA_RX) != HAL_OK)
+	{
+		Error_Handler( );
+	}
+
+	while (HAL_DMA_GetState(&W6100_DMA_RX) != HAL_DMA_STATE_READY);
+#ifdef BUS_DMA_POL
+	HAL_DMA_Start(&W6100_DMA_RX, (uint32_t)addr, pBuf, len);
+	HAL_StatusTypeDef status;
+	status = HAL_DMA_PollForTransfer(&W6100_DMA_RX, HAL_DMA_FULL_TRANSFER, 100);
+	if(status != HAL_OK)
+	{
+		printf("status = %d\r\n", status);
+	}
+#elif defined BUS_DMA_INT
+	HAL_DMA_Start_IT(&W6100_DMA_RX, (uint32_t)addr, pBuf, len);
+	while(dma_ch5_comp != 1);
+	dma_ch5_comp = 0;
+#endif
+#endif
 }
+#endif
 #endif
 
 inline void W6100ResetAssert(void)

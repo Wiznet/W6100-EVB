@@ -32,7 +32,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USE DMA */
-//#define DMA
+#define DMA
 
 /* USER CODE END Includes */
 
